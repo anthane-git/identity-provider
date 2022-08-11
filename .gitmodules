@@ -1,0 +1,6 @@
+[submodule "view"]
+	path = view
+	url = git@github.com:anthane-git/identity-view.git
+[submodule "api"]
+	path = api
+	url = git@github.com:anthane-git/identity-api.git

@@ -1,44 +1,45 @@
 version: '3.9'
 
 services:
-  webserver:
+  nginx:
     image: nginx:alpine
-    container_name: webserver
+    container_name: idp-nginx
     tty: true
     restart: unless-stopped
     depends_on:
-      - db
-      - view
-      - api
+      - postgres
+      - react
+      - nestjs
     networks:
       - public
     ports:
       - 80:80
       - 443:443
 
-  api:
+  nestjs:
     image: api
     build:
       context: ./api
       dockerfile: Dockerfile
+    container_name: idp-nestjs
     restart: always
     ports:
-      - 3000:${NEST_PORT:-3000}
+      - 5500:${NEST_PORT:-3000}
     depends_on:
-      - db
+      - postgres
     env_file:
       - ./api/.env
     volumes:
-      - ./api/src:/app/src
+      - ./api:/app
     stdin_open: true
     tty: true
     networks:
       - private
       - public
 
-  db:
+  postgres:
     image: postgres:13
-    container_name: db
+    container_name: idp-postgres
     restart: always
     ports:
       - ${DB_PORT:-5432}:5432
@@ -49,18 +50,19 @@ services:
     networks:
       - private
 
-  view:
+  react:
     image: view
     build:
       context: ./view
       dockerfile: Dockerfile
+    container_name: idp-react
     restart: always
     ports:
       - 5000:5000
     env_file:
       - ./view/.env.development
     volumes:
-      - ./view/src:/app/src
+      - ./view:/app
     stdin_open: true
     tty: true
     networks:

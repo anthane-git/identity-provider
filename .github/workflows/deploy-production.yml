@@ -50,5 +50,4 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            docker ps
-            cd ${{ secrets.PROJECT_PATH }} && docker-compose up -d
+            cd ${{ secrets.PROJECT_PATH }} && make && docker-compose up -d

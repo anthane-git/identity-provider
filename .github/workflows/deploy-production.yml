@@ -17,10 +17,7 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            make
-            && docker ps
-            && cd ${{ secrets.PROJECT_PATH }} && docker-compose down
-            && cd ${{ secrets.PROJECT_PATH }} && docker-compose rm -f
+            cd /var/www/identity-provider && make && docker-compose down && docker-compose rm -f
 
   Push:
     name: Push Repository To Remote Server 📦

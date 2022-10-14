@@ -1,0 +1,58 @@
+name: Production Continuous Delivery
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  Prepare:
+    name: Prepare Remote Server 🚧
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unmounting running docker containers
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOSTNAME }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            docker ps
+            cd ${{ secrets.PROJECT_PATH }} && docker-compose down
+            cd ${{ secrets.PROJECT_PATH }} && docker-compose rm -f
+
+  Push:
+    name: Push Repository To Remote Server 📦
+    runs-on: ubuntu-latest
+    needs: [Prepare]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Syncing with ssh
+        env:
+          DESTINATION: "${{ secrets.USERNAME }}@${{ secrets.HOSTNAME }}:${{ secrets.PROJECT_PATH }}"
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          echo "${{ env.DEPLOY_KEY }}" > deploy_key
+          chmod 600 ./deploy_key
+          rsync -chav --delete
+            -e 'ssh -i ./deploy_key -o StrictHostKeyChecking=no'
+            --exclude /deploy_key
+            ./ ${{ env.DESTINATION }}
+
+  Deploy:
+    name: Deploy Docker Containers 🚀
+    runs-on: ubuntu-latest
+    needs: [Push]
+    steps:
+      - name: Starting docker containers
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOSTNAME }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            docker ps
+            cd ${{ secrets.PROJECT_PATH }} 
+            && make
+            && docker-compose up -d

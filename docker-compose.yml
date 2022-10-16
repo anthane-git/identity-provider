@@ -63,6 +63,7 @@ services:
       - ./view/.env.development
     volumes:
       - ./view:/app
+      - node_modules:/view/node_modules
     stdin_open: true
     tty: true
     networks:
